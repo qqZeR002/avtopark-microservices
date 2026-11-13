@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>АСУ «Автопарк»</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<!-- Экран входа -->
+<section id="login-screen" class="login">
+  <form id="login-form" class="card">
+    <h1>АСУ «Автопарк»</h1>
+    <label>Пользователь
+      <select id="login-name">
+        <option value="dispatcher">Диспетчер</option>
+        <option value="mechanic">Механик</option>
+        <option value="admin">Администратор</option>
+        <option value="manager">Руководитель</option>
+      </select>
+    </label>
+    <label>Пароль
+      <input id="login-password" type="password" required autocomplete="current-password">
+    </label>
+    <button type="submit">Войти</button>
+    <p id="login-error" class="error-text"></p>
+    <p class="hint">Учебные пароли указаны в README.</p>
+  </form>
+</section>
+
+<!-- Основной экран -->
+<section id="app" hidden>
+  <header>
+    <strong>АСУ «Автопарк»</strong>
+    <nav id="tabs">
+      <button data-tab="vehicles" class="active">Машины</button>
+      <button data-tab="drivers">Водители</button>
+      <button data-tab="trips">Поездки</button>
+      <button data-tab="orders">Обслуживание</button>
+      <button data-tab="reports" data-role="manager">Отчёты</button>
+    </nav>
+    <span id="user-name"></span>
+    <button id="logout" class="link">Выйти</button>
+  </header>
+
+  <div id="message" class="message" hidden></div>
+
+  <main>
+    <!-- Машины -->
+    <div id="tab-vehicles" class="tab">
+      <form id="vehicle-form" class="row" data-role="admin">
+        <input name="plate" placeholder="Госномер" required>
+        <input name="model" placeholder="Модель" required>
+        <select name="category">
+          <option value="B">B — легковая</option>
+          <option value="C">C — грузовая</option>
+          <option value="D">D — автобус</option>
+        </select>
+        <button type="submit">Добавить машину</button>
+      </form>
+      <table>
+        <thead><tr><th>Госномер</th><th>Модель</th><th>Категория</th><th>Состояние</th><th></th></tr></thead>
+        <tbody id="vehicles-body"></tbody>
+      </table>
+    </div>
+
+    <!-- Водители -->
+    <div id="tab-drivers" class="tab" hidden>
+      <form id="driver-form" class="row" data-role="admin">
+        <input name="full_name" placeholder="ФИО" required>
+        <input name="license_number" placeholder="Номер удостоверения" required>
+        <label class="check"><input type="checkbox" name="cat" value="B" checked> B</label>
+        <label class="check"><input type="checkbox" name="cat" value="C"> C</label>
+        <label class="check"><input type="checkbox" name="cat" value="D"> D</label>
+        <button type="submit">Добавить водителя</button>
+      </form>
+      <table>
+        <thead><tr><th>ФИО</th><th>Удостоверение</th><th>Категории</th><th>Состояние</th><th></th></tr></thead>
+        <tbody id="drivers-body"></tbody>
+      </table>
+    </div>
+
+    <!-- Поездки -->
+    <div id="tab-trips" class="tab" hidden>
+      <form id="trip-form" class="row" data-role="dispatcher">
+        <select name="vehicle_id" id="trip-vehicle" required></select>
+        <select name="driver_id" id="trip-driver" required></select>
+        <input name="purpose" placeholder="Цель поездки" required>
+        <input name="at" type="datetime-local" title="Время выезда. Пусто — сейчас">
+        <button type="submit">Выпустить в поездку</button>
+      </form>
+      <table>
+        <thead><tr><th>№</th><th>Машина</th><th>Водитель</th><th>Цель</th><th>Выезд</th>
+          <th>Возвращение</th><th>Пробег, км</th><th>Обслужена</th><th></th></tr></thead>
+        <tbody id="trips-body"></tbody>
+      </table>
+    </div>
+
+    <!-- Обслуживание -->
+    <div id="tab-orders" class="tab" hidden>
+      <p id="working-hours" class="hint"></p>
+      <div class="row" data-role="mechanic">
+        <label>Время действия
+          <input id="order-at" type="datetime-local" title="Пусто — сейчас">
+        </label>
+        <span class="hint">Пусто — текущее время. Это время подставится при нажатии «Начать» или «Завершить».</span>
+      </div>
+      <table>
+        <thead><tr><th>№</th><th>Машина</th><th>Состояние</th><th>Машина вернулась</th>
+          <th>Начато</th><th>Завершено</th><th>Механик</th><th></th></tr></thead>
+        <tbody id="orders-body"></tbody>
+      </table>
+    </div>
+
+    <!-- Отчёты -->
+    <div id="tab-reports" class="tab" hidden>
+      <form id="report-form" class="row">
+        <label>С <input name="from" type="date" required></label>
+        <label>По <input name="to" type="date" required></label>
+        <button type="submit">Построить отчёты</button>
+      </form>
+      <h2>Использование машин</h2>
+      <table>
+        <thead><tr><th>Машина</th><th>Поездок</th><th>Пробег, км</th><th>Часов в поездках</th>
+          <th>Часов ждала обслуживания</th><th>Часов на обслуживании</th><th>Загрузка, %</th></tr></thead>
+        <tbody id="report-vehicles-body"></tbody>
+      </table>
+      <h2>Рабочее время водителей</h2>
+      <table>
+        <thead><tr><th>Водитель</th><th>Поездок</th><th>Часов за рулём</th><th>Пробег, км</th><th>По дням</th></tr></thead>
+        <tbody id="report-drivers-body"></tbody>
+      </table>
+    </div>
+  </main>
+</section>
+
+<script src="/static/app.js"></script>
+</body>
+</html>

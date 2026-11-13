@@ -1,0 +1,98 @@
+# Вся система одной командой: docker compose up --build
+# Значения после ":-" - учебные. Для настоящей установки их задают в файле .env (см. .env.example).
+
+x-service-defaults: &service-defaults
+  restart: unless-stopped
+  environment: &common-env
+    BUSINESS_TZ: ${BUSINESS_TZ:-Europe/Minsk}
+    RABBIT_URL: amqp://${RABBIT_USER:-autopark}:${RABBIT_PASSWORD:-autopark_demo}@rabbitmq:5672/
+
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres_demo}
+      SERVICE_DB_PASSWORD: ${SERVICE_DB_PASSWORD:-service_demo}
+    volumes:
+      - ./postgres/init-databases.sql:/docker-entrypoint-initdb.d/init-databases.sql:ro
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U postgres"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBIT_USER:-autopark}
+      RABBITMQ_DEFAULT_PASS: ${RABBIT_PASSWORD:-autopark_demo}
+    ports:
+      - "127.0.0.1:15672:15672"   # панель RabbitMQ, только с этого компьютера
+    volumes:
+      - rabbitdata:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "check_port_connectivity"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  fleet:
+    <<: *service-defaults
+    build: ./services/fleet
+    environment:
+      DATABASE_URL: postgresql+psycopg://fleet_user:${SERVICE_DB_PASSWORD:-service_demo}@postgres:5432/fleet_db
+    depends_on:
+      postgres: {condition: service_healthy}
+
+  trips:
+    <<: *service-defaults
+    build: ./services/trips
+    environment:
+      <<: *common-env
+      DATABASE_URL: postgresql+psycopg://trips_user:${SERVICE_DB_PASSWORD:-service_demo}@postgres:5432/trips_db
+      FLEET_URL: http://fleet:8000
+    depends_on:
+      postgres: {condition: service_healthy}
+      rabbitmq: {condition: service_healthy}
+
+  maintenance:
+    <<: *service-defaults
+    build: ./services/maintenance
+    environment:
+      <<: *common-env
+      DATABASE_URL: postgresql+psycopg://maintenance_user:${SERVICE_DB_PASSWORD:-service_demo}@postgres:5432/maintenance_db
+    depends_on:
+      postgres: {condition: service_healthy}
+      rabbitmq: {condition: service_healthy}
+
+  reports:
+    <<: *service-defaults
+    build: ./services/reports
+    environment:
+      <<: *common-env
+      DATABASE_URL: postgresql+psycopg://reports_user:${SERVICE_DB_PASSWORD:-service_demo}@postgres:5432/reports_db
+    depends_on:
+      postgres: {condition: service_healthy}
+      rabbitmq: {condition: service_healthy}
+
+  gateway:
+    <<: *service-defaults
+    build: ./services/gateway
+    environment:
+      JWT_SECRET: ${JWT_SECRET:-demo_secret_change_me_please_32_bytes}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin_demo}
+      DISPATCHER_PASSWORD: ${DISPATCHER_PASSWORD:-dispatcher_demo}
+      MECHANIC_PASSWORD: ${MECHANIC_PASSWORD:-mechanic_demo}
+      MANAGER_PASSWORD: ${MANAGER_PASSWORD:-manager_demo}
+    ports:
+      - "${GATEWAY_PORT:-8080}:8000"   # единственный вход в систему
+    depends_on:
+      fleet: {condition: service_healthy}
+      trips: {condition: service_healthy}
+      maintenance: {condition: service_healthy}
+      reports: {condition: service_healthy}
+
+volumes:
+  pgdata:
+  rabbitdata:
