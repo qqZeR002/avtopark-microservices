@@ -1,0 +1,34 @@
+name: Проверка
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  unit-tests:
+    name: Модульные тесты правил
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements-dev.txt
+      - name: Тесты каждого сервиса
+        run: |
+          for service in trips maintenance reports; do
+            (cd services/$service && python -m pytest -q)
+          done
+
+  acceptance:
+    name: Критерии приёмки на запущенной системе
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Запуск всей системы
+        run: docker compose up -d --build --wait
+      - name: Сценарий по критериям приёмки
+        run: python3 scripts/check_requirements.py --with-outage
+      - name: Журналы сервисов при ошибке
+        if: failure()
+        run: docker compose logs --tail 100
