@@ -32,8 +32,8 @@ flowchart LR
     gw --> maint[Обслуживание]
     gw --> rep[Отчёты]
     trips -->|HTTP| fleet
-    trips -. события .-> mq{{RabbitMQ}}
-    maint -. события .-> mq
+    trips -.->|"события"| mq{{RabbitMQ}}
+    maint -.->|"события"| mq
     mq -.-> maint
     mq -.-> trips
     mq -.-> rep

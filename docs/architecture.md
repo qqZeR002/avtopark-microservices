@@ -24,11 +24,11 @@ flowchart LR
 
     trips -->|HTTP: данные машины и водителя| fleet
 
-    trips -. trip.started, trip.finished .-> mq{{RabbitMQ}}
-    maint -. maintenance.started, maintenance.completed .-> mq
-    mq -. trip.finished .-> maint
-    mq -. maintenance.completed .-> trips
-    mq -. все события .-> rep
+    trips -.->|"trip.started, trip.finished"| mq{{RabbitMQ}}
+    maint -.->|"maintenance.started, maintenance.completed"| mq
+    mq -.->|"trip.finished"| maint
+    mq -.->|"maintenance.completed"| trips
+    mq -.->|"все события"| rep
 
     fleet --- fdb[(fleet_db)]
     trips --- tdb[(trips_db)]
