@@ -1,0 +1,37 @@
+@startuml 02-trips
+left to right direction
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam defaultFontName Arial
+title Диспетчер: работа с поездками
+
+actor "Диспетчер" as Disp
+actor "Сервис\nобслуживания" as Maint <<система>>
+
+rectangle "Сервис поездок" {
+  usecase "Выпустить машину в поездку" as Start
+  usecase "Проверить, что водитель\nсвободен (БП-1)" as CheckDriver
+  usecase "Проверить, что машина\nсвободна (БП-2)" as CheckVehicle
+  usecase "Проверить, что машина\nобслужена (БП-4)" as CheckService
+  usecase "Проверить категорию\nв правах (БП-6)" as CheckCategory
+  usecase "Отказать в выпуске\nс объяснением причины" as Refuse
+  usecase "Принять машину из поездки" as Finish
+  usecase "Записать время\nвозвращения и пробег" as Mileage
+  usecase "Создать заявку\nна обслуживание (БП-3)" as CreateOrder
+  usecase "Посмотреть список поездок" as List
+}
+
+Disp --> Start
+Disp --> Finish
+Disp --> List
+
+Start ..> CheckDriver : <<include>>
+Start ..> CheckVehicle : <<include>>
+Start ..> CheckService : <<include>>
+Start ..> CheckCategory : <<include>>
+Refuse ..> Start : <<extend>>
+
+Finish ..> Mileage : <<include>>
+Finish ..> CreateOrder : <<include>>
+CreateOrder --> Maint
+@enduml

@@ -1,0 +1,42 @@
+@startuml 04-admin-reports
+left to right direction
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam defaultFontName Arial
+title Администратор и руководитель: справочники и отчёты
+
+actor "Администратор" as Admin
+actor "Руководитель" as Boss
+
+rectangle "Сервис справочников" {
+  usecase "Добавить машину" as AddVehicle
+  usecase "Списать машину" as OffVehicle
+  usecase "Добавить водителя" as AddDriver
+  usecase "Уволить водителя" as OffDriver
+  usecase "Указать категорию\n(B, C, D)" as Category
+  usecase "Проверить уникальность\nномера (БП-10)" as Unique
+}
+
+rectangle "Сервис отчётов" {
+  usecase "Отчёт по использованию машин" as RepVehicles
+  usecase "Отчёт по рабочему\nвремени водителей" as RepDrivers
+  usecase "Выбрать период" as Period
+  usecase "Показать часы по дням" as ByDays
+}
+
+Admin --> AddVehicle
+Admin --> OffVehicle
+Admin --> AddDriver
+Admin --> OffDriver
+
+AddVehicle ..> Category : <<include>>
+AddDriver ..> Category : <<include>>
+AddVehicle ..> Unique : <<include>>
+AddDriver ..> Unique : <<include>>
+
+Boss --> RepVehicles
+Boss --> RepDrivers
+RepVehicles ..> Period : <<include>>
+RepDrivers ..> Period : <<include>>
+ByDays ..> RepDrivers : <<extend>>
+@enduml

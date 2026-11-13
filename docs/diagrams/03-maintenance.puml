@@ -1,0 +1,32 @@
+@startuml 03-maintenance
+left to right direction
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam defaultFontName Arial
+title Механик: обслуживание машин
+
+actor "Механик" as Mech
+actor "Сервис\nпоездок" as Trips <<система>>
+
+rectangle "Сервис обслуживания" {
+  usecase "Посмотреть очередь заявок" as Queue
+  usecase "Начать обслуживание" as Begin
+  usecase "Завершить обслуживание" as Done
+  usecase "Проверить рабочее время:\nбудни 8:00–17:00 (БП-5)" as CheckTime
+  usecase "Отказать: сервис\nсейчас не работает" as Refuse
+  usecase "Разрешить выпуск машины" as Unblock
+  usecase "Принять заявку\nпосле поездки" as Accept
+}
+
+Mech --> Queue
+Mech --> Begin
+Mech --> Done
+
+Begin ..> CheckTime : <<include>>
+Done ..> CheckTime : <<include>>
+Refuse ..> CheckTime : <<extend>>
+Done ..> Unblock : <<include>>
+
+Trips --> Accept
+Unblock --> Trips
+@enduml

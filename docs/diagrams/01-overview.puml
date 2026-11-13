@@ -1,0 +1,46 @@
+@startuml 01-overview
+left to right direction
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam defaultFontName Arial
+title АСУ «Автопарк»: общая диаграмма вариантов использования
+
+actor "Администратор" as Admin
+actor "Диспетчер" as Disp
+actor "Механик" as Mech
+actor "Руководитель" as Boss
+
+rectangle "АСУ «Автопарк»" {
+  usecase "Войти в систему" as Login
+  usecase "Вести справочник машин" as Vehicles
+  usecase "Вести справочник водителей" as Drivers
+  usecase "Выпустить машину в поездку" as StartTrip
+  usecase "Принять машину из поездки" as FinishTrip
+  usecase "Провести обслуживание" as Service
+  usecase "Смотреть отчёт по машинам" as RepVehicles
+  usecase "Смотреть отчёт по водителям" as RepDrivers
+  usecase "Смотреть списки машин,\nпоездок и заявок" as View
+}
+
+Admin --> Vehicles
+Admin --> Drivers
+Disp --> StartTrip
+Disp --> FinishTrip
+Mech --> Service
+Boss --> RepVehicles
+Boss --> RepDrivers
+
+Admin --> View
+Disp --> View
+Mech --> View
+Boss --> View
+
+Vehicles ..> Login : <<include>>
+Drivers ..> Login : <<include>>
+StartTrip ..> Login : <<include>>
+FinishTrip ..> Login : <<include>>
+Service ..> Login : <<include>>
+RepVehicles ..> Login : <<include>>
+RepDrivers ..> Login : <<include>>
+View ..> Login : <<include>>
+@enduml
